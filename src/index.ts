@@ -1,4 +1,4 @@
-import { defineIntegration, createRestHandler } from '@weldable/integration-core'
+import { defineIntegration, createRestHandler, fakeId, fakeArray, fakeEmail, fakeIsoTimestamp, fakeUrl, deriveSeed } from '@weldable/integration-core'
 
 const rest = createRestHandler()
 
@@ -342,6 +342,13 @@ export default defineIntegration({
           page: 'query',
         },
       }),
+      mockExecute: async (_args, ctx) => ({
+        items: fakeArray(ctx.seed, 3, (s) => ({
+          sha: fakeId(s, 40),
+          commit: { message: `Mock commit ${s.slice(-4)}`, author: { name: 'mock-author', date: fakeIsoTimestamp(s) } },
+          html_url: fakeUrl(s),
+        })),
+      }),
     },
     {
       actionId: 'get_commit',
@@ -386,6 +393,13 @@ export default defineIntegration({
         method: 'GET',
         path: '/repos/{owner}/{repo}/commits/{ref}',
         paramMapping: { owner: 'path', repo: 'path', ref: 'path' },
+      }),
+      mockExecute: async (args, ctx) => ({
+        sha: String(args.ref ?? fakeId(ctx.seed, 40)),
+        html_url: fakeUrl(ctx.seed),
+        commit: { message: 'Mock commit message', author: { name: 'mock-author', email: fakeEmail(ctx.seed), date: fakeIsoTimestamp(ctx.seed) } },
+        files: [],
+        stats: { total: 2, additions: 1, deletions: 1 },
       }),
     },
     {
@@ -895,6 +909,15 @@ export default defineIntegration({
           page: 'query',
         },
       }),
+      mockExecute: async (args, ctx) => ({
+        items: fakeArray(ctx.seed, 3, (s) => ({
+          number: parseInt(fakeId(s, 4), 16) % 1000 + 1,
+          title: `Mock issue ${s.slice(-4)}`,
+          state: String(args.state ?? 'open'),
+          html_url: fakeUrl(s),
+          labels: [],
+        })),
+      }),
     },
     {
       actionId: 'get_issue',
@@ -941,6 +964,14 @@ export default defineIntegration({
         method: 'GET',
         path: '/repos/{owner}/{repo}/issues/{issue_number}',
         paramMapping: { owner: 'path', repo: 'path', issue_number: 'path' },
+      }),
+      mockExecute: async (args, ctx) => ({
+        number: typeof args.issue_number === 'number' ? args.issue_number : 42,
+        title: 'Mock issue title',
+        state: 'open',
+        html_url: fakeUrl(ctx.seed),
+        body: '',
+        labels: [],
       }),
     },
     {
@@ -1021,6 +1052,13 @@ export default defineIntegration({
           labels: 'body',
           milestone: 'body',
         },
+      }),
+      mockExecute: async (args, ctx) => ({
+        number: parseInt(fakeId(ctx.seed, 4), 16) % 1000 + 1,
+        html_url: fakeUrl(ctx.seed),
+        title: String(args.title ?? 'Mock issue title'),
+        state: 'open',
+        created_at: fakeIsoTimestamp(ctx.seed),
       }),
     },
     {
@@ -1108,6 +1146,13 @@ export default defineIntegration({
           assignees: 'body',
         },
       }),
+      mockExecute: async (args, ctx) => ({
+        number: typeof args.issue_number === 'number' ? args.issue_number : 42,
+        title: 'Mock updated issue',
+        state: String(args.state ?? 'open'),
+        html_url: fakeUrl(ctx.seed),
+        updated_at: fakeIsoTimestamp(ctx.seed),
+      }),
     },
     {
       actionId: 'list_issue_comments',
@@ -1175,6 +1220,14 @@ export default defineIntegration({
           page: 'query',
         },
       }),
+      mockExecute: async (_args, ctx) => ({
+        items: fakeArray(ctx.seed, 2, (s) => ({
+          id: parseInt(fakeId(s, 8), 16),
+          body: `Mock comment ${s.slice(-4)}`,
+          user: { login: `user-${s.slice(-4)}` },
+          created_at: fakeIsoTimestamp(s),
+        })),
+      }),
     },
     {
       actionId: 'create_issue_comment',
@@ -1226,6 +1279,12 @@ export default defineIntegration({
         method: 'POST',
         path: '/repos/{owner}/{repo}/issues/{issue_number}/comments',
         paramMapping: { owner: 'path', repo: 'path', issue_number: 'path', body: 'body' },
+      }),
+      mockExecute: async (args, ctx) => ({
+        id: parseInt(fakeId(ctx.seed, 8), 16),
+        html_url: fakeUrl(ctx.seed),
+        body: String(args.body ?? 'Mock comment'),
+        created_at: fakeIsoTimestamp(ctx.seed),
       }),
     },
     {
@@ -1523,6 +1582,16 @@ export default defineIntegration({
           page: 'query',
         },
       }),
+      mockExecute: async (args, ctx) => ({
+        items: fakeArray(ctx.seed, 2, (s) => ({
+          number: parseInt(fakeId(s, 4), 16) % 100 + 1,
+          title: `Mock PR ${s.slice(-4)}`,
+          state: String(args.state ?? 'open'),
+          html_url: fakeUrl(s),
+          head: { ref: 'feature-branch' },
+          base: { ref: 'main' },
+        })),
+      }),
     },
     {
       actionId: 'get_pull_request',
@@ -1568,6 +1637,14 @@ export default defineIntegration({
         method: 'GET',
         path: '/repos/{owner}/{repo}/pulls/{pull_number}',
         paramMapping: { owner: 'path', repo: 'path', pull_number: 'path' },
+      }),
+      mockExecute: async (args, ctx) => ({
+        number: typeof args.pull_number === 'number' ? args.pull_number : 1,
+        title: 'Mock pull request',
+        state: 'open',
+        html_url: fakeUrl(ctx.seed),
+        mergeable: true,
+        merged: false,
       }),
     },
     {
@@ -1648,6 +1725,13 @@ export default defineIntegration({
           body: 'body',
           draft: 'body',
         },
+      }),
+      mockExecute: async (args, ctx) => ({
+        number: parseInt(fakeId(ctx.seed, 4), 16) % 100 + 1,
+        html_url: fakeUrl(ctx.seed),
+        title: String(args.title ?? 'Mock pull request'),
+        state: 'open',
+        created_at: fakeIsoTimestamp(ctx.seed),
       }),
     },
     {
@@ -2073,6 +2157,11 @@ export default defineIntegration({
           commit_message: 'body',
           merge_method: 'body',
         },
+      }),
+      mockExecute: async (_args, ctx) => ({
+        sha: fakeId(ctx.seed, 40),
+        merged: true,
+        message: 'Pull request successfully merged.',
       }),
     },
     {
@@ -2678,6 +2767,13 @@ export default defineIntegration({
         path: '/repos/{owner}/{repo}/contents/{path}',
         paramMapping: { owner: 'path', repo: 'path', path: 'path', ref: 'query' },
       }),
+      mockExecute: async (args, ctx) => ({
+        name: String(args.path ?? 'file.txt').split('/').at(-1) ?? 'file.txt',
+        path: String(args.path ?? 'file.txt'),
+        sha: fakeId(ctx.seed, 40),
+        content: '',
+        html_url: fakeUrl(ctx.seed),
+      }),
     },
     {
       actionId: 'create_or_update_file',
@@ -2753,6 +2849,10 @@ export default defineIntegration({
           sha: 'body',
           branch: 'body',
         },
+      }),
+      mockExecute: async (args, ctx) => ({
+        commit: { sha: fakeId(ctx.seed, 40), message: String(args.message ?? 'Mock commit'), html_url: fakeUrl(ctx.seed) },
+        content: { path: String(args.path ?? 'file.txt'), sha: fakeId(deriveSeed(ctx.seed, 'blob'), 40) },
       }),
     },
     {
